@@ -1,0 +1,11 @@
+{
+  "name": "serverless-twitter-proxy-app",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "kenkoooo <kenkou.n@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "serverless": "^2.44.0",
+    "serverless-rust": "https://github.com/softprops/serverless-rust#ebe43ceacfb7f770569e98e3dfb4bbb6eba0d88d"
+  }
+}

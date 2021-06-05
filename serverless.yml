@@ -1,0 +1,54 @@
+service: serverless-twitter-proxy-app
+provider:
+  name: aws
+  runtime: rust
+  memorySize: 128
+  region: ap-northeast-1
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "dynamodb:GetItem"
+        - "dynamodb:UpdateItem"
+      Resource:
+        - "arn:aws:dynamodb:ap-northeast-1:*:table/TwitterStatuses"
+
+package:
+  individually: true
+
+plugins:
+  - serverless-rust
+
+functions:
+  serverless-twitter-proxy-app:
+    handler: serverless-twitter-proxy-app.resolve-url
+    events:
+      - http:
+          path: /api/lookup
+          method: POST
+
+resources:
+  Resources:
+    TwitterStatuses:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: TwitterStatuses
+        AttributeDefinitions:
+          - AttributeName: status_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: status_id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+
+
+custom:
+
+  # this section customizes of the default
+  # serverless-rust plugin settings
+  rust:
+    # custom docker tag
+    dockerTag: '1.51'
+    #  custom docker image
+    dockerImage: 'softprops/lambda-rust'
