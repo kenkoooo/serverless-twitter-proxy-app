@@ -1,5 +1,7 @@
+use anyhow::Result;
+use async_trait::async_trait;
 use chrono::{FixedOffset, Utc};
-use rusoto_dynamodb::{AttributeValue, UpdateItemInput};
+use rusoto_dynamodb::{AttributeValue, DynamoDb, DynamoDbClient, UpdateItemInput};
 use std::collections::HashMap;
 
 const TABLE_NAME: &str = "TwitterProxyAccessCount";
@@ -7,8 +9,8 @@ const KEY_STATUS_ID: &str = "StatusId";
 const KEY_DATE: &str = "Date";
 const KEY_ACCESS_COUNT: &str = "AccessCount";
 
-pub struct SingleAccess {
-    pub status_id: String,
+struct SingleAccess {
+    status_id: u64,
 }
 
 impl Into<UpdateItemInput> for SingleAccess {
@@ -20,7 +22,7 @@ impl Into<UpdateItemInput> for SingleAccess {
         key.insert(
             KEY_STATUS_ID.to_string(),
             AttributeValue {
-                s: Some(self.status_id),
+                s: Some(self.status_id.to_string()),
                 ..Default::default()
             },
         );
@@ -48,5 +50,19 @@ impl Into<UpdateItemInput> for SingleAccess {
             expression_attribute_values: Some(expression_attribute_values),
             ..Default::default()
         }
+    }
+}
+
+#[async_trait]
+pub trait AccessLogger {
+    async fn log_access(&self, status_id: u64) -> Result<()>;
+}
+
+#[async_trait]
+impl AccessLogger for DynamoDbClient {
+    async fn log_access(&self, status_id: u64) -> Result<()> {
+        let single_access = SingleAccess { status_id };
+        self.update_item(single_access.into()).await?;
+        Ok(())
     }
 }

@@ -7,8 +7,10 @@ publish = false
 
 [dependencies]
 anyhow = "1.0.40"
+async-trait = "0.1.50"
 chrono = "0.4.19"
-egg-mode = "0.15.0"
+dotenv = "0.15.0"
+egg-mode = { git = "https://github.com/egg-mode-rs/egg-mode.git", rev = "6b81073eba9c3b123ca0e80bdb5ef61d1758f131" }
 lambda_http = "0.3.0"
 lambda_runtime = "0.3.0"
 rusoto_core = "0.46.0"
