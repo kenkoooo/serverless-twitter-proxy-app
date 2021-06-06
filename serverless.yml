@@ -8,9 +8,11 @@ provider:
     - Effect: "Allow"
       Action:
         - "dynamodb:GetItem"
+        - "dynamodb:PutItem"
         - "dynamodb:UpdateItem"
       Resource:
-        - "arn:aws:dynamodb:ap-northeast-1:*:table/TwitterStatuses"
+        - "arn:aws:dynamodb:ap-northeast-1:*:table/TwitterProxyDataCache"
+        - "arn:aws:dynamodb:ap-northeast-1:*:table/TwitterProxyAccessCount"
 
 package:
   individually: true
@@ -25,19 +27,38 @@ functions:
       - http:
           path: /api/lookup
           method: POST
+    environment:
+
 
 resources:
   Resources:
-    TwitterStatuses:
+    TwitterProxyDataCache:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: TwitterStatuses
+        TableName: TwitterProxyDataCache
         AttributeDefinitions:
-          - AttributeName: status_id
+          - AttributeName: StatusId
             AttributeType: S
         KeySchema:
-          - AttributeName: status_id
+          - AttributeName: StatusId
             KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+    TwitterProxyAccessCount:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: TwitterProxyAccessCount
+        AttributeDefinitions:
+          - AttributeName: StatusId
+            AttributeType: S
+          - AttributeName: Date
+            AttributeType: S
+        KeySchema:
+          - AttributeName: StatusId
+            KeyType: HASH
+          - AttributeName: Date
+            KeyType: RANGE
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
