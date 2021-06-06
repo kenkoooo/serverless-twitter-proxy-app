@@ -19,6 +19,7 @@ package:
 
 plugins:
   - serverless-rust
+  - serverless-s3-sync
 
 functions:
   resolve-url:
@@ -65,6 +66,81 @@ resources:
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
+    StaticWebSite:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.webSiteName}
+        AccessControl: PublicRead
+        WebsiteConfiguration:
+          IndexDocument: index.html
+    StaticWebSitePolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        Bucket:
+          Ref: StaticWebSite
+        PolicyDocument:
+          Statement:
+            - Sid: PublicReadGetObject
+              Effect: Allow
+              Principal: "*"
+              Action:
+                - s3:GetObject
+              Resource:
+                Fn::Join: ["", ["arn:aws:s3:::",{"Ref": "StaticWebSite"},"/*"]]
+    ProxyResource:
+      Type: AWS::ApiGateway::Resource
+      Properties:
+        ParentId:
+          Fn::GetAtt:
+            - ApiGatewayRestApi # default Rest API logical ID
+            - RootResourceId
+        PathPart: "{proxy+}"
+        RestApiId:
+          Ref: ApiGatewayRestApi
+    ProxyMethod:
+      Type: AWS::ApiGateway::Method
+      Properties:
+        AuthorizationType: NONE
+        ResourceId:
+          Ref: ProxyResource
+        RestApiId:
+          Ref: ApiGatewayRestApi
+        HttpMethod: GET
+        RequestParameters:
+          method.request.path.proxy: false
+        MethodResponses:
+          - StatusCode: 200
+        Integration:
+          IntegrationHttpMethod: GET
+          Type: HTTP_PROXY
+          Uri: http://douga-t.com.s3-website-ap-northeast-1.amazonaws.com/{proxy}
+          RequestParameters:
+            integration.request.path.proxy: method.request.path.proxy
+          IntegrationResponses:
+            - StatusCode: 200
+    RootProxyMethod:
+      Type: AWS::ApiGateway::Method
+      Properties:
+        AuthorizationType: NONE
+        ResourceId:
+          Fn::GetAtt:
+            - ApiGatewayRestApi # default Rest API logical ID
+            - RootResourceId
+        RestApiId:
+          Ref: ApiGatewayRestApi
+        HttpMethod: GET
+#        RequestParameters:
+#          method.request.path.proxy: false
+        MethodResponses:
+          - StatusCode: 200
+        Integration:
+          IntegrationHttpMethod: GET
+          Type: HTTP_PROXY
+          Uri: http://douga-t.com.s3-website-ap-northeast-1.amazonaws.com/
+#          RequestParameters:
+#            integration.request.path.proxy: method.request.path.proxy
+          IntegrationResponses:
+            - StatusCode: 200
 
 
 custom:
@@ -76,3 +152,7 @@ custom:
     dockerTag: '1.51'
     #  custom docker image
     dockerImage: 'softprops/lambda-rust'
+  webSiteName: douga-t.com
+  s3Sync:
+    - bucketName: ${self:custom.webSiteName}
+      localDir: frontend/build

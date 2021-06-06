@@ -5,7 +5,9 @@
   "author": "kenkoooo <kenkou.n@gmail.com>",
   "license": "MIT",
   "devDependencies": {
+    "prettier": "^2.3.1",
     "serverless": "^2.44.0",
-    "serverless-rust": "https://github.com/softprops/serverless-rust#ebe43ceacfb7f770569e98e3dfb4bbb6eba0d88d"
+    "serverless-rust": "https://github.com/softprops/serverless-rust#ebe43ceacfb7f770569e98e3dfb4bbb6eba0d88d",
+    "serverless-s3-sync": "^1.17.1"
   }
 }
